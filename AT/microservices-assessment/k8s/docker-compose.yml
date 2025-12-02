@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # --- Banco de dados do service-api ---
+  postgres_api:
+    image: postgres:16
+    container_name: postgres_api_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: produtosdb
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_api:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # --- Microsserviço de produtos (Provider) ---
+  service-api:
+    build: ./service-api
+    container_name: service-api
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_api:5432/produtosdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - postgres_api
+    networks:
+      - app-network
+
+  # --- Banco de dados do service-cliente ---
+  postgres_cliente:
+    image: postgres:16
+    container_name: postgres_cliente_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: clientedb
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata_cliente:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  # --- Microsserviço de clientes (Consumer) ---
+  service-cliente:
+    build: ./service-cliente
+    container_name: service-cliente
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_cliente:5432/clientedb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+      # 🔗 URL interna do service-api (Provider)
+      SERVICE_API_URL: http://service-api:8081
+    depends_on:
+      - postgres_cliente
+      - service-api
+    networks:
+      - app-network
+
+  # --- Microsserviço de consumo genérico (opcional) ---
+  service-consumer:
+    build: ./service-consumer
+    container_name: service-consumer
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      SERVICE_API_URL: http://service-api:8081
+    depends_on:
+      - service-api
+    networks:
+      - app-network
+
+# --- Volumes persistentes ---
+volumes:
+  pgdata_api:
+  pgdata_cliente:
+
+# --- Rede compartilhada entre microsserviços ---
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-cliente
+  namespace: microservices-assessment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-cliente
+  template:
+    metadata:
+      labels:
+        app: service-cliente
+    spec:
+      containers:
+        - name: service-cliente
+          image: service-cliente:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: service-cliente-config

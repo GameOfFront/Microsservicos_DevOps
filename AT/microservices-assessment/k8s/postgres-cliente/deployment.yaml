@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-cliente
+  namespace: microservices-assessment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-cliente
+  template:
+    metadata:
+      labels:
+        app: postgres-cliente
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "clientedb"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-cliente-storage
+      volumes:
+        - name: postgres-cliente-storage
+          persistentVolumeClaim:
+            claimName: postgres-cliente-pvc

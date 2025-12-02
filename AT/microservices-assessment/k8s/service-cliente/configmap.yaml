@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-cliente-config
+  namespace: microservices-assessment
+data:
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-cliente:5432/clientedb
+  SPRING_DATASOURCE_USERNAME: postgres
+  SPRING_DATASOURCE_PASSWORD: postgres
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SERVICE_API_URL: http://service-api:8081

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-api
+  namespace: microservices-assessment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-api
+  template:
+    metadata:
+      labels:
+        app: postgres-api
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "postgres"
+            - name: POSTGRES_PASSWORD
+              value: "postgres"
+            - name: POSTGRES_DB
+              value: "produtosdb"
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-api-storage
+      volumes:
+        - name: postgres-api-storage
+          persistentVolumeClaim:
+            claimName: postgres-api-pvc

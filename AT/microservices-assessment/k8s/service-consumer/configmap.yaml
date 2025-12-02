@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-consumer-config
+  namespace: microservices-assessment
+data:
+  SERVICE_API_URL: http://service-api:8081

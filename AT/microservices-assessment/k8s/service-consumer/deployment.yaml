@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-consumer
+  namespace: microservices-assessment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-consumer
+  template:
+    metadata:
+      labels:
+        app: service-consumer
+    spec:
+      containers:
+        - name: service-consumer
+          image: service-consumer:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - configMapRef:
+                name: service-consumer-config

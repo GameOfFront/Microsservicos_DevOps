@@ -1,0 +1,13 @@
+target/*
+!target/service-cliente-0.0.1-SNAPSHOT.jar
+
+.git
+.gitignore
+.idea
+.mvn
+mvnw
+mvnw.cmd
+HELP.md
+README.md
+Dockerfile
+docker-compose.yml
