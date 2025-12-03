@@ -5,8 +5,8 @@ import com.assessment.service_cliente.model.ProdutoDTO;
 import com.assessment.service_cliente.service.ClienteService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/clientes")
@@ -19,32 +19,31 @@ public class ClienteController {
     }
 
     @GetMapping
-    public List<Cliente> listar() {
+    public Flux<Cliente> listar() {
         return service.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
+    public Mono<ResponseEntity<Cliente>> buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Cliente adicionar(@RequestBody Cliente cliente) {
+    public Mono<Cliente> adicionar(@RequestBody Cliente cliente) {
         return service.salvar(cliente);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deletar(id);
-        return ResponseEntity.noContent().build();
+    public Mono<ResponseEntity<Void>> deletar(@PathVariable Long id) {
+        return service.deletar(id)
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 
-    // 🔹 NOVO: endpoint que consome o service-api
+    // 🔹 Chamada reativa ao service-api
     @GetMapping("/produtos")
-    public ResponseEntity<List<ProdutoDTO>> listarProdutosDoServiceApi() {
-        List<ProdutoDTO> produtos = service.listarProdutosDoServiceApi();
-        return ResponseEntity.ok(produtos);
+    public Flux<ProdutoDTO> listarProdutosDoServiceApi() {
+        return service.listarProdutosDoServiceApi();
     }
 }

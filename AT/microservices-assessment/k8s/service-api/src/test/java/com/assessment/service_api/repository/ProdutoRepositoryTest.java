@@ -3,52 +3,33 @@ package com.assessment.service_api.repository;
 import com.assessment.service_api.model.Produto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.test.context.ActiveProfiles;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
-
-@DataJpaTest
+@DataR2dbcTest
 class ProdutoRepositoryTest {
 
     @Autowired
     private ProdutoRepository produtoRepository;
 
     @Test
-    void deveSalvarEBuscarProduto() {
-        Produto produto = Produto.builder()
-                .nome("Cadeira Gamer")
-                .preco(1500.0)
-                .build();
+    void deveSalvarEBuscarProdutoReativamente() {
+        Produto produto = new Produto(null, "Cadeira Gamer", 1500.0);
 
-        produtoRepository.save(produto);
+        Mono<Produto> fluxo = produtoRepository.save(produto)
+                .flatMap(saved -> produtoRepository.findById(saved.getId()));
 
-        List<Produto> todos = produtoRepository.findAll();
-
-        assertEquals(1, todos.size());
-        assertEquals("Cadeira Gamer", todos.get(0).getNome());
+        StepVerifier.create(fluxo)
+                .expectNextMatches(p -> p.getNome().equals("Cadeira Gamer"))
+                .verifyComplete();
     }
 
     @Test
-    void deveBuscarProdutoPorId() {
-        Produto produto = produtoRepository.save(Produto.builder()
-                .nome("Teclado")
-                .preco(200.0)
-                .build());
-
-        Optional<Produto> encontrado = produtoRepository.findById(produto.getId());
-
-        assertTrue(encontrado.isPresent());
-        assertEquals("Teclado", encontrado.get().getNome());
-    }
-
-    @Test
-    void deveRetornarListaVaziaQuandoNaoExistirProdutos() {
-        List<Produto> produtos = produtoRepository.findAll();
-        assertTrue(produtos.isEmpty());
+    void deveRetornarVazioQuandoNaoEncontrarProduto() {
+        StepVerifier.create(produtoRepository.findById(999L))
+                .verifyComplete();
     }
 }

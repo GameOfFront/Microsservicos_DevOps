@@ -1,7 +1,9 @@
 package com.assessment.service_cliente.repository;
 
 import com.assessment.service_cliente.model.Cliente;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
 
-public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+@Repository
+public interface ClienteRepository extends ReactiveCrudRepository<Cliente, Long> {
 }

@@ -1,0 +1,5 @@
+CREATE TABLE produto (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(255),
+    preco DOUBLE PRECISION
+);

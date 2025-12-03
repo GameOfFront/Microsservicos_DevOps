@@ -1,82 +1,101 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.5</version> <!-- ✅ versão estável -->
+		<version>3.3.5</version>
 		<relativePath/>
 	</parent>
 
 	<groupId>com.assessment</groupId>
 	<artifactId>service-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>Service API</name>
-	<description>Microsserviço responsável por disponibilizar dados</description>
+	<name>Service API (Reativo)</name>
+	<description>Microsserviço reativo responsável por disponibilizar dados</description>
 
 	<properties>
 		<java.version>21</java.version>
 	</properties>
 
 	<dependencies>
-		<!-- ✅ Web -->
+
+		<!-- 🌐 WebFlux (Reativo) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
-		<!-- ✅ JPA -->
+		<!-- 💾 Banco de dados reativo -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
+			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
 		</dependency>
 
-		<!-- ✅ Actuator -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>r2dbc-postgresql</artifactId>
+		</dependency>
+
+		<!-- ✅ Adicionado: executa schema.sql automaticamente -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- 🧪 Banco H2 para testes -->
+		<dependency>
+			<groupId>io.r2dbc</groupId>
+			<artifactId>r2dbc-h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- ⚙️ Actuator (monitoramento / health check) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 
-		<!-- ✅ Banco de dados PostgreSQL -->
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-
-		<!-- ✅ Lombok -->
+		<!-- 🧩 Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
 
-		<!-- ✅ Testes com Spring Boot e JUnit 5 -->
+		<!-- 🧪 Testes -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
-		<!-- ✅ Banco em memória H2 para testes -->
 		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
-			<!-- ✅ Compilador -->
+
+			<!-- Compilador -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version>
 				<configuration>
 					<release>21</release>
 					<annotationProcessorPaths>
@@ -88,43 +107,48 @@
 				</configuration>
 			</plugin>
 
-			<!-- ✅ Plugin Spring Boot -->
+			<!-- Testes + cobertura -->
 			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.2.5</version>
 				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
+					<useModulePath>false</useModulePath>
+					<failIfNoTests>false</failIfNoTests>
 				</configuration>
 			</plugin>
 
-			<!-- ✅ Plugin JaCoCo (corrigido) -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.12</version>
 				<executions>
-					<!-- 1️⃣ Injeta o agente JaCoCo antes dos testes -->
 					<execution>
 						<id>prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
 					</execution>
-
-					<!-- 2️⃣ Gera o relatório após os testes -->
 					<execution>
 						<id>report</id>
 						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<excludes>
+								<exclude>**/com/assessment/service_api/ServiceApiApplication.class</exclude>
+								<exclude>**/com/assessment/service_api/model/Produto.class</exclude>
+							</excludes>
+						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+
+			<!-- Spring Boot plugin -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
 	</build>

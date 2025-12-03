@@ -6,15 +6,13 @@ import com.assessment.service_cliente.model.ProdutoDTO;
 import com.assessment.service_cliente.service.ClienteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ClienteControllerTest {
@@ -22,46 +20,51 @@ class ClienteControllerTest {
     @Mock
     private ClienteService service;
 
-    @InjectMocks
-    private ClienteController controller;
+    private WebTestClient webTestClient;
 
     @BeforeEach
     void setup() {
         MockitoAnnotations.openMocks(this);
+        ClienteController controller = new ClienteController(service);
+        webTestClient = WebTestClient.bindToController(controller).build();
     }
 
     @Test
     void deveListarClientes() {
-        when(service.listarTodos()).thenReturn(List.of(new Cliente()));
+        when(service.listarTodos()).thenReturn(Flux.just(new Cliente()));
 
-        List<Cliente> resultado = controller.listar();
-
-        assertEquals(1, resultado.size());
-        verify(service, times(1)).listarTodos();
+        webTestClient.get()
+                .uri("/clientes")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Cliente.class)
+                .hasSize(1);
     }
 
     @Test
     void deveBuscarClientePorId() {
         Cliente cliente = new Cliente();
+        cliente.setId(1L);
         cliente.setNome("Paulo");
 
-        when(service.buscarPorId(1L)).thenReturn(Optional.of(cliente));
+        when(service.buscarPorId(1L)).thenReturn(Mono.just(cliente));
 
-        ResponseEntity<Cliente> resposta = controller.buscarPorId(1L);
-
-        assertEquals(200, resposta.getStatusCode().value());
-
-        assertEquals("Paulo", resposta.getBody().getNome());
+        webTestClient.get()
+                .uri("/clientes/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Cliente.class)
+                .isEqualTo(cliente);
     }
 
     @Test
     void deveRetornar404QuandoNaoEncontrarCliente() {
-        when(service.buscarPorId(2L)).thenReturn(Optional.empty());
+        when(service.buscarPorId(2L)).thenReturn(Mono.empty());
 
-        ResponseEntity<Cliente> resposta = controller.buscarPorId(2L);
-
-        assertEquals(404, resposta.getStatusCode().value());
-
+        webTestClient.get()
+                .uri("/clientes/2")
+                .exchange()
+                .expectStatus().isNotFound();
     }
 
     @Test
@@ -69,19 +72,26 @@ class ClienteControllerTest {
         Cliente novo = new Cliente();
         novo.setNome("Carla");
 
-        when(service.salvar(novo)).thenReturn(novo);
+        when(service.salvar(any())).thenReturn(Mono.just(novo));
 
-        Cliente salvo = controller.adicionar(novo);
-
-        assertEquals("Carla", salvo.getNome());
-        verify(service, times(1)).salvar(novo);
+        webTestClient.post()
+                .uri("/clientes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(novo)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Cliente.class)
+                .isEqualTo(novo);
     }
 
     @Test
     void deveDeletarCliente() {
-        ResponseEntity<Void> resposta = controller.deletar(1L);
-        assertEquals(204, resposta.getStatusCode().value());
-        verify(service, times(1)).deletar(1L);
+        when(service.deletar(1L)).thenReturn(Mono.empty());
+
+        webTestClient.delete()
+                .uri("/clientes/1")
+                .exchange()
+                .expectStatus().isNoContent();
     }
 
     @Test
@@ -89,13 +99,13 @@ class ClienteControllerTest {
         ProdutoDTO produto = new ProdutoDTO();
         produto.setNome("Monitor");
 
-        when(service.listarProdutosDoServiceApi()).thenReturn(List.of(produto));
+        when(service.listarProdutosDoServiceApi()).thenReturn(Flux.just(produto));
 
-        ResponseEntity<List<ProdutoDTO>> resposta = controller.listarProdutosDoServiceApi();
-
-        // Linha Corrigida: De 204 para 200
-        assertEquals(200, resposta.getStatusCode().value());
-
-        assertEquals("Monitor", resposta.getBody().get(0).getNome());
+        webTestClient.get()
+                .uri("/clientes/produtos")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(ProdutoDTO.class)
+                .hasSize(1);
     }
 }

@@ -1,30 +1,31 @@
 # =========================
-# Etapa 1 - Build do projeto com Maven
+# Etapa 1 - Build do projeto
 # =========================
-FROM eclipse-temurin:21-jdk-jammy AS builder
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Instala o Maven (necessário porque a imagem base só tem o JDK)
-RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
-
-# Copia os arquivos Maven
+# Copia o pom.xml e baixa dependências para cache
 COPY pom.xml .
-COPY src ./src
+RUN mvn dependency:go-offline -B
 
-# Compila o projeto (sem rodar testes)
+# Copia o código-fonte e empacota
+COPY src ./src
 RUN mvn clean package -DskipTests
 
 # =========================
-# Etapa 2 - Runtime (imagem leve)
+# Etapa 2 - Imagem final (Runtime)
 # =========================
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 
-# Copia o JAR gerado na etapa anterior
-COPY --from=builder /app/target/service-api-0.0.1-SNAPSHOT.jar app.jar
+# Copia o JAR gerado da etapa anterior
+COPY --from=build /app/target/*.jar app.jar
 
-# Expõe a porta do serviço
+# Define o perfil ativo (para usar application-docker.properties)
+ENV SPRING_PROFILES_ACTIVE=docker
+
+# Expõe a porta padrão da aplicação
 EXPOSE 8081
 
-# Comando de inicialização
+# Define o comando de inicialização
 ENTRYPOINT ["java", "-jar", "app.jar"]

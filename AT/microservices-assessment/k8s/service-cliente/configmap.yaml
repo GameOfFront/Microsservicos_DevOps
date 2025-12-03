@@ -4,8 +4,7 @@ metadata:
   name: service-cliente-config
   namespace: microservices-assessment
 data:
-  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-cliente:5432/clientedb
-  SPRING_DATASOURCE_USERNAME: postgres
-  SPRING_DATASOURCE_PASSWORD: postgres
-  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SPRING_R2DBC_URL: r2dbc:postgresql://postgres-cliente:5432/clientedb
+  SPRING_R2DBC_USERNAME: postgres
+  SPRING_R2DBC_PASSWORD: postgres
   SERVICE_API_URL: http://service-api:8081

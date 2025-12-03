@@ -4,7 +4,7 @@ metadata:
   name: service-api-config
   namespace: microservices-assessment
 data:
-  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-api:5432/produtosdb
-  SPRING_DATASOURCE_USERNAME: postgres
-  SPRING_DATASOURCE_PASSWORD: postgres
-  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SPRING_R2DBC_URL: r2dbc:postgresql://postgres-api:5432/produtosdb
+  SPRING_R2DBC_USERNAME: postgres
+  SPRING_R2DBC_PASSWORD: postgres
+  SPRING_PROFILES_ACTIVE: docker

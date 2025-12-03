@@ -1,65 +1,48 @@
-# Microservices Assessment
+# 🧩 Microservices Assessment
 
-## Descrição
-Arquitetura de microsserviços desenvolvida com Spring Boot 3.3.5 e Java 21, composta por três aplicações independentes que se comunicam entre si via REST. O projeto utiliza Docker, Docker Compose e Kubernetes para orquestração, além de testes automatizados com JUnit, Mockito e JaCoCo para garantir qualidade e cobertura de código.
-
----
+Arquitetura de microsserviços desenvolvida com **Spring Boot 3.3.5** e **Java 21**, composta por três aplicações independentes que se comunicam entre si via **REST**. O projeto utiliza **Docker**, **Kubernetes (Minikube)** e **PostgreSQL** para persistência e orquestração.
 
 ## Microsserviços
 
-| Serviço | Função | Porta |
-|----------|--------|-------|
-| service-api | Gerenciamento de produtos | 8081 |
-| service-cliente | Gerenciamento de clientes | 8082 |
-| service-consumer | Consumo e agregação de dados dos outros serviços | 8083 |
+| Serviço         | Função                                         | Porta Interna | Tipo de Serviço |
+|----------------|-------------------------------------------------|---------------|-----------------|
+| service-api     | Gerenciamento de produtos                       | 8081          | ClusterIP       |
+| service-cliente | Gerenciamento de clientes                       | 8082          | ClusterIP       |
+| service-consumer| Consome e agrega dados dos outros dois serviços | 8083          | NodePort        |
 
----
+## Tecnologias Utilizadas
 
-## Tecnologias
+- Java 21
+- Spring Boot 3.3.5
+- Spring WebFlux
+- Spring Data R2DBC
+- PostgreSQL
+- Maven
+- Docker
+- Kubernetes (kubectl + Minikube)
+- PowerShell (para automação com o script `setup-k8s.ps1`)
 
-**Linguagem e Frameworks**
-- Java 21  
-- Spring Boot 3.3.5  
-- Spring Data JPA  
-- Spring Web  
-- Spring Boot Actuator  
+## Estrutura de Diretórios
 
-**Banco de Dados**
-- PostgreSQL (produção)  
-- H2 Database (testes)
+```text
+k8s/
+├── postgres-api/
+│   ├── deployment.yaml
+│   ├── pvc.yaml
+│   └── service.yaml
+├── postgres-cliente/
+│   ├── deployment.yaml
+│   ├── pvc.yaml
+│   └── service.yaml
+├── service-api/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── configmap.yaml
+├── service-cliente/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── configmap.yaml
+└── service-consumer/
+    ├── deployment.yaml
+    └── service.yaml
 
-**Build e Testes**
-- Maven  
-- JUnit 5  
-- Mockito  
-- JaCoCo  
-
-**DevOps**
-- Docker  
-- Docker Compose  
-- Kubernetes  
-- Spring Boot Maven Plugin  
-
-**Outros**
-- Lombok  
-- Jackson Databind  
-
----
-
-## Requisitos
-- Java 21  
-- Maven 3.9+  
-- Docker e Docker Compose  
-- Kubernetes (kubectl e minikube ou Docker Desktop com K8s habilitado)
-
----
-
-## Execução Local
-
-### 1. Compilar os serviços
-```bash
-cd service-api && mvn clean package -DskipTests
-cd ../service-cliente && mvn clean package -DskipTests
-cd ../service-consumer && mvn clean package -DskipTests
-
-docker-compose up --build

@@ -2,16 +2,16 @@ package com.assessment.service_cliente;
 
 import com.assessment.service_cliente.config.AppConfig;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AppConfigTest {
 
     @Test
-    void deveCriarBeanRestTemplate() {
+    void deveCriarBeanWebClient() {
         AppConfig config = new AppConfig();
-        RestTemplate restTemplate = config.restTemplate();
-        assertNotNull(restTemplate);
+        WebClient client = config.webClient(WebClient.builder());
+        assertNotNull(client);
     }
 }

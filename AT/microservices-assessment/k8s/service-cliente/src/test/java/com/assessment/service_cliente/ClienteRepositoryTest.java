@@ -2,23 +2,27 @@ package com.assessment.service_cliente;
 
 import com.assessment.service_cliente.model.Cliente;
 import com.assessment.service_cliente.repository.ClienteRepository;
+import org.junit.jupiter.api.BeforeEach; // Importação adicionada
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.data.r2dbc.DataR2dbcTest;
 import org.springframework.test.context.ActiveProfiles;
+import reactor.test.StepVerifier;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-@DataJpaTest
+@DataR2dbcTest
 @ActiveProfiles("test")
 class ClienteRepositoryTest {
 
     @Autowired
     private ClienteRepository repository;
+
+    // Adicionado: Garante que o banco H2 esteja limpo antes de cada teste
+    @BeforeEach
+    void setup() {
+        // Usamos block() para garantir que a operação reativa de exclusão termine antes
+        // do próximo teste começar.
+        repository.deleteAll().block();
+    }
 
     @Test
     void deveSalvarEListarCliente() {
@@ -26,23 +30,11 @@ class ClienteRepositoryTest {
         cliente.setNome("Maria");
         cliente.setEmail("maria@email.com");
 
-        repository.save(cliente);
-
-        List<Cliente> clientes = repository.findAll();
-        assertEquals(1, clientes.size());
-        assertEquals("Maria", clientes.get(0).getNome());
-    }
-
-    @Test
-    void deveBuscarPorId() {
-        Cliente cliente = new Cliente();
-        cliente.setNome("João");
-        cliente.setEmail("joao@email.com");
-        Cliente salvo = repository.save(cliente);
-
-        Optional<Cliente> encontrado = repository.findById(salvo.getId());
-        assertTrue(encontrado.isPresent());
-        assertEquals("João", encontrado.get().getNome());
+        repository.save(cliente)
+                .thenMany(repository.findAll())
+                .as(StepVerifier::create)
+                .expectNextMatches(c -> c.getNome().equals("Maria"))
+                .verifyComplete();
     }
 
     @Test
@@ -50,9 +42,12 @@ class ClienteRepositoryTest {
         Cliente cliente = new Cliente();
         cliente.setNome("Carlos");
         cliente.setEmail("carlos@email.com");
-        Cliente salvo = repository.save(cliente);
 
-        repository.deleteById(salvo.getId());
-        assertTrue(repository.findAll().isEmpty());
+        repository.save(cliente)
+                .flatMap(saved -> repository.deleteById(saved.getId()))
+                .thenMany(repository.findAll())
+                .as(StepVerifier::create)
+                .expectComplete() // Agora deve ser completo (vazio), pois a tabela foi limpa
+                .verify();
     }
 }

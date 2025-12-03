@@ -8,14 +8,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.context.ActiveProfiles;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-@ActiveProfiles("test")
 
+@ActiveProfiles("test")
 class ProdutoControllerTest {
 
     @Mock
@@ -30,18 +29,17 @@ class ProdutoControllerTest {
     }
 
     @Test
-    void deveListarTodosOsProdutos() {
-        List<Produto> produtosMock = Arrays.asList(
-                new Produto(1L, "Notebook", 3500.0),
-                new Produto(2L, "Mouse", 150.0)
-        );
+    void deveListarTodosOsProdutosReativamente() {
+        Produto p1 = new Produto(1L, "Notebook", 3500.0);
+        Produto p2 = new Produto(2L, "Mouse", 150.0);
 
-        when(produtoRepository.findAll()).thenReturn(produtosMock);
+        when(produtoRepository.findAll()).thenReturn(Flux.just(p1, p2));
 
-        List<Produto> resultado = produtoController.listar();
+        StepVerifier.create(produtoController.listar())
+                .expectNext(p1)
+                .expectNext(p2)
+                .verifyComplete();
 
-        assertEquals(2, resultado.size());
-        assertEquals("Notebook", resultado.get(0).getNome());
         verify(produtoRepository, times(1)).findAll();
     }
 
@@ -50,12 +48,12 @@ class ProdutoControllerTest {
         Produto novo = new Produto(null, "Teclado", 200.0);
         Produto salvo = new Produto(1L, "Teclado", 200.0);
 
-        when(produtoRepository.save(novo)).thenReturn(salvo);
+        when(produtoRepository.save(novo)).thenReturn(Mono.just(salvo));
 
-        Produto resultado = produtoController.salvar(novo);
+        StepVerifier.create(produtoController.salvar(novo))
+                .expectNextMatches(p -> p.getId() == 1L && p.getNome().equals("Teclado"))
+                .verifyComplete();
 
-        assertNotNull(resultado.getId());
-        assertEquals("Teclado", resultado.getNome());
         verify(produtoRepository, times(1)).save(novo);
     }
 }
